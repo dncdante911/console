@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>MiniHost Panel</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main>
+    <h1>MiniHost Panel</h1>
+
+    <section>
+      <h2>Лицензия</h2>
+      <p>
+        Статус:
+        <strong class="{{ 'ok' if license.active else 'bad' }}">
+          {{ 'Активна' if license.active else 'Не активна' }}
+        </strong>
+        — {{ license.message }}
+      </p>
+      <p>Machine ID: <code>{{ machine_id }}</code></p>
+      <form method="post" action="/license/activate" class="inline-form">
+        <input type="url" name="server_url" value="{{ license.server_url }}" placeholder="https://license.example.com" required />
+        <input type="text" name="license_key" value="{{ license.license_key }}" placeholder="LIC-XXXX-XXXX" required />
+        <button type="submit">Активировать</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Сайт</h2>
+      <form method="post" action="/websites" class="grid-form">
+        <input type="text" name="domain" placeholder="example.com" required />
+        <input type="text" name="root_path" placeholder="/var/www/example.com/public" required />
+        <input type="text" name="php_version" value="8.2" required />
+        <button type="submit">Создать сайт</button>
+      </form>
+
+      <table>
+        <thead><tr><th>ID</th><th>Домен</th><th>Root</th><th>SSL</th><th>Действие</th></tr></thead>
+        <tbody>
+          {% for site in websites %}
+            <tr>
+              <td>{{ site.id }}</td>
+              <td>{{ site.domain }}</td>
+              <td>{{ site.root_path }}</td>
+              <td>{{ "Да" if site.ssl_enabled else "Нет" }}</td>
+              <td>
+                {% if not site.ssl_enabled %}
+                  <form method="post" action="/websites/{{ site.id }}/ssl" class="inline-form">
+                    <input type="email" name="email" placeholder="admin@example.com" required />
+                    <button type="submit">Выпустить SSL</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Почта</h2>
+      <form method="post" action="/mail/domains" class="inline-form">
+        <input type="text" name="domain" placeholder="mail-domain.com" required />
+        <button type="submit">Добавить домен почты</button>
+      </form>
+
+      <form method="post" action="/mail/mailboxes" class="inline-form">
+        <input type="email" name="email" placeholder="user@mail-domain.com" required />
+        <input type="password" name="password" placeholder="Пароль" required />
+        <button type="submit">Создать ящик</button>
+      </form>
+
+      <h3>Домены</h3>
+      <ul>
+      {% for domain in mail_domains %}<li>{{ domain.domain }}</li>{% endfor %}
+      </ul>
+
+      <h3>Ящики</h3>
+      <ul>
+      {% for mailbox in mailboxes %}<li>{{ mailbox.email }}</li>{% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Операции</h2>
+      <form method="post" action="/ops/nginx/reload">
+        <button type="submit">Проверить и перезагрузить Nginx</button>
+      </form>
+      <p>Последняя команда certbot сохраняется в <code>runtime/last_certbot_command.txt</code>.</p>
+    </section>
+  </main>
+</body>
+</html>
